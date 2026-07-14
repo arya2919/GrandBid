@@ -24,6 +24,8 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // UI primitives commonly export component helpers alongside components.
+      'react-refresh/only-export-components': 'off',
     },
   },
 ])

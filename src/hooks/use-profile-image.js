@@ -68,7 +68,7 @@ export const useProfileImage = (userData, currentUser) => {
           url.searchParams.set('c', '1'); // Enable caching
           url.searchParams.set('_t', Math.floor(Date.now() / (1000 * 60 * 30))); // 30-minute cache
           return url.toString();
-        } catch (e) {
+        } catch {
           return null; // Invalid URL
         }
       }
@@ -88,7 +88,7 @@ export const useProfileImage = (userData, currentUser) => {
           url.searchParams.set('c', '1'); // Enable caching
           url.searchParams.set('_t', Math.floor(Date.now() / (1000 * 60 * 30))); // 30-minute cache
           return url.toString();
-        } catch (e) {
+        } catch {
           return null; // Invalid URL
         }
       }

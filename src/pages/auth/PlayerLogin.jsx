@@ -9,6 +9,12 @@ import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import Logo from '@/assets/logo.png';
 import bg from '@/assets/bg3.jpg';
+import {
+  signUpWithEmailAndPassword,
+  signInWithEmailAndPassword_,
+  signInWithGoogle,
+  resetPassword
+} from '@/lib/auth';
 
 export default function PlayerLogin() {
   const [isLogin, setIsLogin] = useState(true);
@@ -39,7 +45,7 @@ export default function PlayerLogin() {
     }
 
     // Check for special character
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
       errors.push("contain at least one special character");
     }
 
@@ -76,21 +82,17 @@ export default function PlayerLogin() {
       return;
     }
 
-    // Preview the image and store it for later upload
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setProfilePicture(event.target.result);
-    };
-    reader.readAsDataURL(file);
+    // Store the file object for upload
+    setProfilePicture(file);
   };
 
   const handleGoogleSignIn = async () => {
     try {
-      // TODO: Implement Google Sign In functionality
-      // await googleSignIn();
-      toast.info('Google Sign In will be implemented soon');
-      // navigate('/');
+      await signInWithGoogle('player');
+      toast.success('Google Sign In successful!');
+      navigate('/bidder-dashboard');
     } catch (error) {
+      console.error('Google sign in error:', error);
       toast.error('Could not sign in with Google. Please try again.');
     }
   };
@@ -110,12 +112,16 @@ export default function PlayerLogin() {
     }
 
     try {
-      // TODO: Implement password reset functionality
-      // await resetPassword(email);
+      await resetPassword(email);
       toast.success('Password reset email sent. Please check your inbox.');
       setIsResetPassword(false);
     } catch (error) {
-      toast.error('Could not send reset email. Please check your email address.');
+      console.error('Reset password error:', error);
+      if (error.code === 'auth/user-not-found') {
+        toast.error('No account found with this email address.');
+      } else {
+        toast.error('Could not send reset email. Please try again.');
+      }
     }
   };
 
@@ -169,39 +175,29 @@ export default function PlayerLogin() {
 
     try {
       if (isLogin) {
-        // TODO: Implement login functionality
-        // await login(email, password);
+        await signInWithEmailAndPassword_(email, password);
         toast.success('Login successful!');
-        // navigate('/');
+        navigate('/bidder-dashboard');
       } else {
-        // TODO: Implement signup functionality
-        // Register with email and password
-        // const userCredential = await signup(email, password, name);
-
-        // If a profile picture was selected, update the user profile
-        // if (profilePicture && userCredential.user) {
-        //   try {
-        //     await updateProfile(userCredential.user, {
-        //       photoURL: profilePicture
-        //     });
-        //   } catch (photoError) {
-        //     console.error("Error setting profile photo:", photoError);
-        //     // Continue anyway, as the account was already created
-        //   }
-        // }
-
-        toast.success('Registration successful! Please log in to continue.');
-        setIsLogin(true);
+        await signUpWithEmailAndPassword(email, password, name, profilePicture, 'player');
+        toast.success('Registration successful! Welcome to GrandBid!');
+        navigate('/bidder-dashboard');
       }
     } catch (error) {
+      console.error('Authentication error:', error);
       if (error.code === 'auth/email-already-in-use') {
         toast.error('This email is already registered. Please try logging in instead.');
       } else if (error.code === 'auth/invalid-email') {
         toast.error('Please enter a valid email address.');
       } else if (error.code === 'auth/weak-password') {
-        // Use our more detailed password validation message
         const passwordError = validatePassword(password);
         toast.error(passwordError || 'Password is too weak. It must meet all the requirements.');
+      } else if (error.code === 'auth/wrong-password') {
+        toast.error('Incorrect password. Please try again.');
+      } else if (error.code === 'auth/user-not-found') {
+        toast.error('No account found with this email. Please register first.');
+      } else if (error.code === 'auth/invalid-credential') {
+        toast.error('Invalid email or password. Please check your credentials.');
       } else {
         toast.error(error.message || 'An error occurred. Please try again.');
       }
@@ -247,6 +243,16 @@ export default function PlayerLogin() {
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Full Name"
                       className="bg-white/90 border-1 border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-300/50 h-11 sm:h-12 text-sm sm:text-base px-4 sm:px-4 rounded-lg font-medium text-amber-900 placeholder:text-amber-600/70 transition-all duration-200 hover:border-amber-300"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-amber-800">Profile Picture (Optional)</label>
+                    <Input
+                      id="profilePicture"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfilePictureChange}
+                      className="bg-white/90 border-1 border-amber-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-300/50 h-11 sm:h-12 text-sm sm:text-base px-4 rounded-lg font-medium text-amber-900 file:border-0 file:bg-transparent file:text-amber-800 file:font-medium transition-all duration-200 hover:border-amber-300"
                     />
                   </div>
                 </>

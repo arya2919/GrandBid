@@ -16,6 +16,7 @@ export const GlowingCard = ({
         "relative flex-1 min-w-[14rem] p-6 rounded-2xl text-white",
         "bg-slate-800/80 border border-slate-700/50 backdrop-blur-sm",
         "transition-all duration-300 ease-out",
+        hoverEffect && "hover:-translate-y-1",
         className
       )}
       style={{
@@ -46,7 +47,6 @@ export const GlowingCards = ({
 }) => {
   const containerRef = useRef(null);
   const overlayRef = useRef(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [showOverlay, setShowOverlay] = useState(false);
 
   useEffect(() => {
@@ -60,8 +60,7 @@ export const GlowingCards = ({
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
-      setMousePosition({ x, y });
-      setShowOverlay(true);
+      setShowOverlay(enableHover);
 
       overlay.style.setProperty('--x', x + 'px');
       overlay.style.setProperty('--y', y + 'px');
@@ -80,7 +79,7 @@ export const GlowingCards = ({
       container.removeEventListener('mousemove', handleMouseMove);
       container.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [enableGlow, glowOpacity]);
+  }, [enableGlow, enableHover, glowOpacity]);
 
   const containerStyle = {
     '--gap': gap,
@@ -135,7 +134,7 @@ export const GlowingCards = ({
               )}
               style={{ padding: "var(--padding)" }}
             >
-              {React.Children.map(children, (child, index) => {
+              {React.Children.map(children, (child) => {
                 if (React.isValidElement(child) && child.type === GlowingCard) {
                   const cardGlowColor = child.props.glowColor || "#f59e0b";
                   return React.cloneElement(child, {

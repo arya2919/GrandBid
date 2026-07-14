@@ -179,12 +179,12 @@ export default function WizardingAuctionLanding() {
 
         <div className="text-center relative mt-10 -mb-6">
           <p className="text-sm text-gray-400 mb-2">Need help with bidding?</p>
-          <button
-            onClick={() => setShowChat(true)}
+          <a
+            href="mailto:council@grandbid.com?subject=GrandBid%20Support"
             className="text-[#60a5fa] text-lg font-bold hover:text-yellow-500 transition-colors"
           >
             Contact Magical Support
-          </button>
+          </a>
         </div>
       </main>
 

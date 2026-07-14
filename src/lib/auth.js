@@ -107,28 +107,33 @@ export const uploadProfilePicture = async (file, uid) => {
 };
 
 // Sign up with email and password
-export const signUpWithEmailAndPassword = async (email, password, name, profilePicture = null) => {
+export const signUpWithEmailAndPassword = async (
+  email,
+  password,
+  name,
+  profilePicture = null,
+  role = 'bidder'
+) => {
   try {
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
-    
-    let photoURL = '';
-    
-    // Upload profile picture if provided
-    if (profilePicture) {
-      photoURL = await uploadProfilePicture(profilePicture, user.uid);
-    }
-    
+
     // Update auth profile
     await updateProfile(user, {
       displayName: name,
-      photoURL
+      photoURL: ''
     });
-    
-    // Create user document in Firestore
+
+    // Create the document before uploading a picture. The upload helper updates
+    // this document, so uploading first fails for newly registered users.
     await createUserDocument(user, { 
       name,
-      photoURL
+      photoURL: '',
+      role
     });
+
+    if (profilePicture) {
+      await uploadProfilePicture(profilePicture, user.uid);
+    }
     
     return user;
   } catch (error) {
@@ -153,13 +158,13 @@ export const signInWithEmailAndPassword_ = async (email, password) => {
 };
 
 // Sign in with Google
-export const signInWithGoogle = async () => {
+export const signInWithGoogle = async (role = 'bidder') => {
   try {
     const provider = new GoogleAuthProvider();
     const { user } = await signInWithPopup(auth, provider);
     
     // Create or update user document
-    await createUserDocument(user);
+    await createUserDocument(user, { role });
     
     return user;
   } catch (error) {

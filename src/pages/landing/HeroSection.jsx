@@ -67,8 +67,9 @@ export const HeroSection = () => {
           variant="magical" 
           size="lg" 
           className="text-lg px-12 py-6 h-auto text-shadow-md group relative overflow-hidden"
+          onClick={() => { window.location.href = '/pre-signup'; }}
         >
-          <span className="relative z-10 flex items-center gap-3" onClick={() => { window.location.href = '/pre-signup'; setIsOpen(false); }}>
+          <span className="relative z-10 flex items-center gap-3">
             <Wand2 className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
             Enter the Auction
             <Sparkles className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
