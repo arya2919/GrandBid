@@ -4,7 +4,8 @@ import {
   signOut, 
   sendPasswordResetEmail,
   GoogleAuthProvider,
-  signInWithPopup,
+  getRedirectResult,
+  signInWithRedirect,
   updateProfile 
 } from 'firebase/auth';
 import { 
@@ -177,15 +178,24 @@ export const signInWithEmailAndPassword_ = async (email, password) => {
   return user;
 };
 
-// Sign in with Google
+// Start Google authentication with a full-page redirect. This avoids popup
+// polling, which triggers Cross-Origin-Opener-Policy warnings in Chrome.
 export const signInWithGoogle = async (role = 'bidder') => {
   const provider = new GoogleAuthProvider();
-  const { user } = await signInWithPopup(auth, provider);
-    
-    // Create or update user document
-    await createUserDocument(user, { role });
-    
-  return user;
+  window.sessionStorage.setItem('grandbid-google-role', role);
+  await signInWithRedirect(auth, provider);
+};
+
+// Complete a Google redirect after Firebase returns the user to the app.
+export const completeGoogleRedirect = async () => {
+  const result = await getRedirectResult(auth);
+  if (!result?.user) return null;
+
+  const role = window.sessionStorage.getItem('grandbid-google-role') || 'bidder';
+  window.sessionStorage.removeItem('grandbid-google-role');
+  await createUserDocument(result.user, { role });
+  window.location.replace(role === 'bidder' ? '/bidder/dashboard' : '/bidder-dashboard');
+  return result.user;
 };
 
 // Sign out

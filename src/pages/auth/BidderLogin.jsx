@@ -93,8 +93,6 @@ export default function BidderLogin() {
     requestInProgress.current = true;
     try {
       await signInWithGoogle();
-      toast.success('Google Sign In successful!');
-      navigate('/bidder/dashboard');
     } catch (error) {
       toast.error(getFirebaseErrorMessage(error, 'Could not sign in with Google. Please try again.'));
     } finally {

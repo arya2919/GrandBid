@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { getUserDocument } from '../lib/auth';
+import { completeGoogleRedirect, getUserDocument } from '../lib/auth';
 import LoadingScreen from '../components/LoadingScreen';
 
 const AuthContext = createContext();
@@ -20,7 +20,16 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let unsubscribe;
+
+    const initialiseAuth = async () => {
+      try {
+        await completeGoogleRedirect();
+      } catch {
+        // The normal auth listener below still restores any existing session.
+      }
+
+      unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       
       if (user) {
@@ -38,9 +47,12 @@ export const AuthProvider = ({ children }) => {
       }
       
       setLoading(false);
-    });
+      });
+    };
 
-    return unsubscribe;
+    initialiseAuth();
+
+    return () => unsubscribe?.();
   }, []);
 
   const value = {

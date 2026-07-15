@@ -93,8 +93,6 @@ export default function OrganizerLogin() {
     requestInProgress.current = true;
     try {
       await signInWithGoogle('organizer');
-      toast.success('Google Sign In successful!');
-      navigate('/bidder-dashboard');
     } catch (error) {
       toast.error(getFirebaseErrorMessage(error, 'Could not sign in with Google. Please try again.'));
     } finally {
