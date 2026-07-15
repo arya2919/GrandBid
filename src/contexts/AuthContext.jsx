@@ -28,8 +28,9 @@ export const AuthProvider = ({ children }) => {
           // Get user data from Firestore
           const userData = await getUserDocument(user.uid);
           setUserData(userData);
-        } catch (error) {
-          console.error('Error fetching user data:', error);
+        } catch {
+          // A signed-in user may be temporarily unable to reach Firestore.
+          // Keep the auth session active and let the next auth-state refresh retry.
           setUserData(null);
         }
       } else {

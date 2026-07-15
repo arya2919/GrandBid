@@ -13,7 +13,8 @@ import {
   signUpWithEmailAndPassword,
   signInWithEmailAndPassword_,
   signInWithGoogle,
-  resetPassword
+  resetPassword,
+  getFirebaseErrorMessage
 } from '@/lib/auth';
 
 export default function PlayerLogin() {
@@ -92,8 +93,7 @@ export default function PlayerLogin() {
       toast.success('Google Sign In successful!');
       navigate('/bidder-dashboard');
     } catch (error) {
-      console.error('Google sign in error:', error);
-      toast.error('Could not sign in with Google. Please try again.');
+      toast.error(getFirebaseErrorMessage(error, 'Could not sign in with Google. Please try again.'));
     }
   };
 
@@ -184,7 +184,6 @@ export default function PlayerLogin() {
         navigate('/bidder-dashboard');
       }
     } catch (error) {
-      console.error('Authentication error:', error);
       if (error.code === 'auth/email-already-in-use') {
         toast.error('This email is already registered. Please try logging in instead.');
       } else if (error.code === 'auth/invalid-email') {
@@ -199,7 +198,7 @@ export default function PlayerLogin() {
       } else if (error.code === 'auth/invalid-credential') {
         toast.error('Invalid email or password. Please check your credentials.');
       } else {
-        toast.error(error.message || 'An error occurred. Please try again.');
+        toast.error(getFirebaseErrorMessage(error));
       }
     }
   };

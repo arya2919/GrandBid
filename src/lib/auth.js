@@ -21,12 +21,42 @@ import {
 } from 'firebase/storage';
 import { auth, db, storage } from './firebase';
 
+const isFirestoreConnectivityError = (error) => [
+  'unavailable',
+  'deadline-exceeded',
+  'failed-precondition'
+].includes(error?.code);
+
+export const getFirebaseErrorMessage = (error, fallback = 'Something went wrong. Please try again.') => {
+  const messages = {
+    'auth/email-already-in-use': 'This email is already registered. Please log in instead.',
+    'auth/invalid-email': 'Please enter a valid email address.',
+    'auth/invalid-credential': 'Invalid email or password. Please check your credentials.',
+    'auth/user-not-found': 'No account was found with this email. Please register first.',
+    'auth/wrong-password': 'Incorrect password. Please try again.',
+    'auth/popup-closed-by-user': 'Google sign-in was cancelled.',
+    'auth/popup-blocked': 'Your browser blocked the Google sign-in window. Please allow pop-ups and try again.',
+    'auth/network-request-failed': 'Network error. Check your internet connection and try again.'
+  };
+
+  return messages[error?.code] || fallback;
+};
+
 // Create user document in Firestore
 export const createUserDocument = async (user, additionalData = {}) => {
   if (!user) return;
   
   const userRef = doc(db, 'users', user.uid);
-  const userSnap = await getDoc(userRef);
+  let userSnap;
+  try {
+    userSnap = await getDoc(userRef);
+  } catch (error) {
+    // Authentication can succeed while Firestore is temporarily unreachable.
+    // Do not report that as a failed sign-in; the auth state remains valid and
+    // Firestore will be retried on the next session.
+    if (isFirestoreConnectivityError(error)) return null;
+    throw error;
+  }
   
   if (!userSnap.exists()) {
     const { displayName, email, photoURL } = user;
@@ -44,7 +74,7 @@ export const createUserDocument = async (user, additionalData = {}) => {
         ...additionalData
       });
     } catch (error) {
-      console.error('Error creating user document:', error);
+      if (isFirestoreConnectivityError(error)) return null;
       throw error;
     }
   } else {
@@ -54,7 +84,7 @@ export const createUserDocument = async (user, additionalData = {}) => {
         lastLoginAt: serverTimestamp()
       });
     } catch (error) {
-      console.error('Error updating last login:', error);
+      if (!isFirestoreConnectivityError(error)) throw error;
     }
   }
   
@@ -74,7 +104,7 @@ export const getUserDocument = async (uid) => {
     }
     return null;
   } catch (error) {
-    console.error('Error getting user document:', error);
+    if (isFirestoreConnectivityError(error)) return null;
     throw error;
   }
 };
@@ -114,8 +144,7 @@ export const signUpWithEmailAndPassword = async (
   profilePicture = null,
   role = 'bidder'
 ) => {
-  try {
-    const { user } = await createUserWithEmailAndPassword(auth, email, password);
+  const { user } = await createUserWithEmailAndPassword(auth, email, password);
 
     // Update auth profile
     await updateProfile(user, {
@@ -135,42 +164,28 @@ export const signUpWithEmailAndPassword = async (
       await uploadProfilePicture(profilePicture, user.uid);
     }
     
-    return user;
-  } catch (error) {
-    console.error('Error signing up:', error);
-    throw error;
-  }
+  return user;
 };
 
 // Sign in with email and password
 export const signInWithEmailAndPassword_ = async (email, password) => {
-  try {
-    const { user } = await signInWithEmailAndPassword(auth, email, password);
+  const { user } = await signInWithEmailAndPassword(auth, email, password);
     
     // Update last login time
     await createUserDocument(user);
     
-    return user;
-  } catch (error) {
-    console.error('Error signing in:', error);
-    throw error;
-  }
+  return user;
 };
 
 // Sign in with Google
 export const signInWithGoogle = async (role = 'bidder') => {
-  try {
-    const provider = new GoogleAuthProvider();
-    const { user } = await signInWithPopup(auth, provider);
+  const provider = new GoogleAuthProvider();
+  const { user } = await signInWithPopup(auth, provider);
     
     // Create or update user document
     await createUserDocument(user, { role });
     
-    return user;
-  } catch (error) {
-    console.error('Error signing in with Google:', error);
-    throw error;
-  }
+  return user;
 };
 
 // Sign out
