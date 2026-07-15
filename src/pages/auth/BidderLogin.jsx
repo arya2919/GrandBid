@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -25,6 +25,7 @@ export default function BidderLogin() {
   const [name, setName] = useState('');
   const [profilePicture, setProfilePicture] = useState(null);
   const [isResetPassword, setIsResetPassword] = useState(false);
+  const requestInProgress = useRef(false);
   const navigate = useNavigate();
 
   const validatePassword = (password) => {
@@ -88,12 +89,16 @@ export default function BidderLogin() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (requestInProgress.current) return;
+    requestInProgress.current = true;
     try {
       await signInWithGoogle();
       toast.success('Google Sign In successful!');
       navigate('/bidder/dashboard');
     } catch (error) {
       toast.error(getFirebaseErrorMessage(error, 'Could not sign in with Google. Please try again.'));
+    } finally {
+      requestInProgress.current = false;
     }
   };
 
@@ -129,7 +134,7 @@ export default function BidderLogin() {
     e.preventDefault();
 
     if (isResetPassword) {
-      handleResetPassword(e);
+      await handleResetPassword(e);
       return;
     }
 
@@ -173,6 +178,9 @@ export default function BidderLogin() {
       return;
     }
 
+    if (requestInProgress.current) return;
+    requestInProgress.current = true;
+
     try {
       if (isLogin) {
         await signInWithEmailAndPassword_(email, password);
@@ -201,6 +209,8 @@ export default function BidderLogin() {
       } else {
         toast.error(getFirebaseErrorMessage(error));
       }
+    } finally {
+      requestInProgress.current = false;
     }
   };
 
