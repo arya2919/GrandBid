@@ -183,11 +183,11 @@ export default function OrganizerLogin() {
       if (isLogin) {
         await signInWithEmailAndPassword_(email, password);
         toast.success('Login successful!');
-        navigate('/bidder-dashboard');
+        navigate('/bidder/dashboard');
       } else {
         await signUpWithEmailAndPassword(email, password, name, profilePicture, 'organizer');
         toast.success('Registration successful! Welcome to GrandBid!');
-        navigate('/bidder-dashboard');
+        navigate('/bidder/dashboard');
       }
     } catch (error) {
       if (error.code === 'auth/email-already-in-use') {

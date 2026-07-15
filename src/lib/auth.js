@@ -194,7 +194,7 @@ export const completeGoogleRedirect = async () => {
   const role = window.sessionStorage.getItem('grandbid-google-role') || 'bidder';
   window.sessionStorage.removeItem('grandbid-google-role');
   await createUserDocument(result.user, { role });
-  window.location.replace(role === 'bidder' ? '/bidder/dashboard' : '/bidder-dashboard');
+  window.location.replace('/bidder/dashboard');
   return result.user;
 };
 

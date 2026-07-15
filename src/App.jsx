@@ -31,11 +31,6 @@ const App = () => {
           <Route path="/house-rules" element={<HouseRules />} />
 
           {/* Bidder Dashboard with Navigation */}
-          <Route path="/bidder-dashboard" element={
-            <ProtectedRoute>
-              <BidderApp />
-            </ProtectedRoute>
-          } />
           <Route path="/bidder/*" element={
             <ProtectedRoute>
               <BidderApp />
