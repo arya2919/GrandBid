@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "grandbid",
+    "site": "grandbid1",
     "public": "dist",
     "ignore": [
       "firebase.json",
